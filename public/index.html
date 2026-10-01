@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ShopLite</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #241c16;
+        --muted: #6f6256;
+        --paper: #f3efe6;
+        --card: #fffdf8;
+        --line: #e2d8c8;
+        --accent: #0f6b56;
+        --accent-ink: #f4fff9;
+        --clay: #9a3e22;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Iowan Old Style", Palatino, Georgia, serif;
+        color: var(--ink);
+        background: var(--paper);
+      }
+      header, main { width: min(1080px, calc(100% - 32px)); margin: 0 auto; }
+      header { padding: 28px 0 8px; display: flex; justify-content: space-between; gap: 16px; align-items: end; }
+      h1 { font-size: 2.2rem; margin: 0; letter-spacing: -0.03em; }
+      h2 { margin: 0 0 12px; font-size: 1.2rem; }
+      p { margin: 6px 0 0; color: var(--muted); }
+      main { display: grid; grid-template-columns: 1.6fr 0.9fr; gap: 20px; padding: 12px 0 40px; }
+      .panel, .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+      }
+      .panel { padding: 16px; }
+      .toolbar { display: flex; gap: 8px; margin-bottom: 14px; }
+      input, button {
+        font: inherit;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        padding: 8px 10px;
+      }
+      input { background: #fff; color: var(--ink); width: 100%; }
+      button {
+        background: var(--accent);
+        color: var(--accent-ink);
+        border-color: transparent;
+        cursor: pointer;
+      }
+      button.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+      .card { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+      .price { color: var(--clay); font-variant-numeric: tabular-nums; }
+      .sku, .stock, .status { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; }
+      .card button { margin-top: auto; }
+      .line { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+      .stack { display: grid; gap: 8px; margin: 12px 0; }
+      pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+        background: #f7f3eb;
+        border-radius: 10px;
+        padding: 10px;
+        min-height: 3rem;
+      }
+      .status { margin-top: 8px; }
+      @media (max-width: 800px) {
+        main { grid-template-columns: 1fr; }
+        header { flex-direction: column; align-items: start; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>ShopLite</h1>
+        <p>Browse the catalog, fill a cart, and check out with a fake payment token.</p>
+      </div>
+      <div class="sku" id="who">Signing in…</div>
+    </header>
+    <main>
+      <section>
+        <form class="toolbar" id="search-form">
+          <input id="q" type="search" placeholder="Search name, description, or SKU" />
+          <button class="ghost" type="submit">Search</button>
+        </form>
+        <div class="grid" id="products"></div>
+      </section>
+      <aside class="panel">
+        <h2>Cart</h2>
+        <div id="cart"></div>
+        <div class="stack">
+          <label>Payment token
+            <input id="payment-token" value="tok_test" />
+          </label>
+          <button id="checkout" type="button">Checkout</button>
+        </div>
+        <h2>Order lookup</h2>
+        <form class="stack" id="lookup-form">
+          <input id="order-id" placeholder="ord_…" />
+          <button class="ghost" type="submit">Look up</button>
+        </form>
+        <pre id="output">No order yet.</pre>
+        <div class="status" id="status"></div>
+      </aside>
+    </main>
+    <script>
+      const state = { token: "", userId: "demo_user" };
+      const productsEl = document.querySelector("#products");
+      const cartEl = document.querySelector("#cart");
+      const outputEl = document.querySelector("#output");
+      const statusEl = document.querySelector("#status");
+      const whoEl = document.querySelector("#who");
+
+      function money(cents) {
+        const sign = cents < 0 ? "-" : "";
+        return sign + "$" + (Math.abs(cents) / 100).toFixed(2);
+      }
+
+      function setStatus(message) {
+        statusEl.textContent = message || "";
+      }
+
+      async function api(path, options) {
+        const opts = options || {};
+        const headers = Object.assign({}, opts.headers);
+        if (opts.body) headers["content-type"] = "application/json";
+        if (state.token && !opts.anonymous) headers.authorization = "Bearer " + state.token;
+        const res = await fetch(path, {
+          method: opts.method || "GET",
+          headers,
+          body: opts.body ? JSON.stringify(opts.body) : undefined,
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const error = new Error(data.message || data.error || ("Request failed (" + res.status + ")"));
+          error.payload = data;
+          throw error;
+        }
+        return data;
+      }
+
+      async function signIn() {
+        const data = await api("/auth/token", { method: "POST", body: { userId: state.userId } });
+        state.token = data.token;
+        whoEl.textContent = data.userId;
+      }
+
+      function renderProducts(products) {
+        productsEl.replaceChildren();
+        if (!products.length) {
+          productsEl.textContent = "No products matched.";
+          return;
+        }
+        for (const product of products) {
+          const card = document.createElement("article");
+          card.className = "card";
+          const title = document.createElement("strong");
+          title.textContent = product.name;
+          const desc = document.createElement("div");
+          desc.textContent = product.description;
+          const meta = document.createElement("div");
+          meta.className = "sku";
+          meta.textContent = product.sku + " · stock " + product.stock;
+          const price = document.createElement("div");
+          price.className = "price";
+          price.textContent = money(product.priceCents);
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = "Add to cart";
+          button.addEventListener("click", () => addToCart(product.id));
+          card.append(title, desc, meta, price, button);
+          productsEl.append(card);
+        }
+      }
+
+      function renderCart(items) {
+        cartEl.replaceChildren();
+        if (!items.length) {
+          cartEl.textContent = "Cart is empty.";
+          return;
+        }
+        for (const item of items) {
+          const row = document.createElement("div");
+          row.className = "line";
+          const name = document.createElement("div");
+          name.textContent = item.name + " × " + item.qty;
+          const price = document.createElement("div");
+          price.textContent = money(item.unitPriceCents * item.qty);
+          row.append(name, price);
+          cartEl.append(row);
+        }
+      }
+
+      async function loadProducts() {
+        const q = document.querySelector("#q").value.trim();
+        const path = q ? "/products?q=" + encodeURIComponent(q) : "/products";
+        const data = await api(path);
+        renderProducts(data.products);
+      }
+
+      async function loadCart() {
+        const data = await api("/cart");
+        renderCart(data.items);
+      }
+
+      async function addToCart(productId) {
+        setStatus("");
+        try {
+          const data = await api("/cart", { method: "POST", body: { productId, qty: 1 } });
+          renderCart(data.items || []);
+        } catch (error) {
+          setStatus(error.message);
+        }
+      }
+
+      async function checkout() {
+        setStatus("");
+        try {
+          const paymentToken = document.querySelector("#payment-token").value.trim();
+          const data = await api("/checkout", { method: "POST", body: { paymentToken } });
+          outputEl.textContent = JSON.stringify(data, null, 2);
+          document.querySelector("#order-id").value = data.order.id;
+          await loadCart();
+          await loadProducts();
+        } catch (error) {
+          setStatus(error.message);
+        }
+      }
+
+      async function lookup(event) {
+        event.preventDefault();
+        setStatus("");
+        const id = document.querySelector("#order-id").value.trim();
+        if (!id) return;
+        try {
+          const data = await api("/orders/" + encodeURIComponent(id), { anonymous: true });
+          outputEl.textContent = JSON.stringify(data, null, 2);
+        } catch (error) {
+          setStatus(error.message);
+        }
+      }
+
+      document.querySelector("#search-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        loadProducts().catch((error) => setStatus(error.message));
+      });
+      document.querySelector("#checkout").addEventListener("click", checkout);
+      document.querySelector("#lookup-form").addEventListener("submit", lookup);
+
+      signIn()
+        .then(() => Promise.all([loadProducts(), loadCart()]))
+        .catch((error) => setStatus(error.message));
+    </script>
+  </body>
+</html>

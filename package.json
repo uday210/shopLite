@@ -1,0 +1,26 @@
+{
+  "name": "shoplite",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tiny e-commerce seed: catalog, cart, fake checkout, and order lookup.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.5",
+    "@supabase/supabase-js": "^2.76.1",
+    "hono": "^4.9.12"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.8",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
