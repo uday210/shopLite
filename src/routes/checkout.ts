@@ -81,8 +81,18 @@ checkoutRoutes.post("/checkout", async (c) => {
   const subtotalCents = lines.reduce((sum, line) => sum + line.unitPriceCents * line.qty, 0);
   const totals = computeTotal(subtotalCents);
   const payment = processPayment(paymentToken, totals.totalCents);
-  // INTENTIONAL DEFECT: a processor decline is ignored and the order is stored as paid.
-  const status = payment.status;
+  if (payment.declined || payment.status !== "paid") {
+    return c.json(
+      {
+        error: "payment declined",
+        payment: {
+          status: payment.status,
+          declined: payment.declined,
+        },
+      },
+      402,
+    );
+  }
 
   const order = await createOrder({
     userId,
@@ -91,7 +101,7 @@ checkoutRoutes.post("/checkout", async (c) => {
     taxCents: totals.taxCents,
     totalCents: totals.totalCents,
     paymentToken,
-    status,
+    status: payment.status,
   });
 
   await clearCart(userId);
