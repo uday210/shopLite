@@ -31,6 +31,12 @@ npm run dev
 
 `npm start` runs the compiled `dist/index.js`, so run `npm run build` after source changes.
 
+Decline-payment regression tests:
+
+```bash
+npm test
+```
+
 ## Environment
 
 Copy `.env.example` if you want a file to edit. The process reads the environment directly.
@@ -84,7 +90,7 @@ curl -s -X POST http://localhost:4317/cart \
 
 ### `POST /checkout`
 
-Requires a bearer token. With no `items` array, the current cart is checked out and then cleared. `paymentToken` is any fake token such as `tok_test`. Decline tokens (`tok_decline`, `decline`, `tok_fail`) are still stored as paid; see DEFECTS.md.
+Requires a bearer token. With no `items` array, the current cart is checked out and then cleared. `paymentToken` is any fake token such as `tok_test`. Decline tokens (`tok_decline`, `decline`, `tok_fail`, compared case-insensitively) are rejected with HTTP 402. No order is created and the cart is left in place.
 
 Optional `items` can override the cart. If a line includes `unitPriceCents`, that integer is what gets charged.
 
