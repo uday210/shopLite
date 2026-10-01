@@ -1,0 +1,14 @@
+# Intentional defects
+
+These bugs are part of the ShopLite seed for the support-bot pipeline. Leave them in place.
+
+1. **Client-trusted price.** `POST /checkout` charges `unitPriceCents` from the request body when that field is present, instead of the catalog price. See `src/routes/checkout.ts`.
+2. **Inventory is not decremented.** `createOrder` in `src/db/orders.ts` writes the order and does not reduce `products.stock`.
+3. **Negative and zero quantity.** `POST /cart` accepts `qty` of `0` or below and stores the resulting line quantity. See `src/routes/cart.ts`.
+4. **Auth bypass on order lookup.** `GET /orders/:id` does not require a bearer token, so any caller who knows an order id can read it. See `src/routes/orders.ts`.
+5. **SQL injection on product search.** `GET /products?q=` concatenates `q` into the SQL text in `src/routes/products.ts`. SQLite executes that string directly. When Supabase is configured, the same string is passed to the `shoplite_query` function defined in `migrations/001_init.sql`.
+6. **A declined payment is still marked paid.** `processPayment` in `src/payments/fakeProcessor.ts` reports `status: "paid"` even when the token is a decline (`tok_decline`, `decline`, or `tok_fail`). `POST /checkout` stores that status and does not reject the order.
+7. **Cart database errors return success.** If the cart write throws (for example an unknown `productId` foreign key), `POST /cart` responds with `{ "ok": true }`. See `src/routes/cart.ts`.
+8. **Oversell race.** `createOrder` in `src/db/orders.ts` reads stock with no transaction and no row lock, then inserts the order. Concurrent checkouts are not serialized.
+9. **Stack traces on 500.** The error middleware in `src/middleware/errors.ts` returns `message` and `stack` to the client for unhandled errors.
+10. **Tax total is off by one cent.** `computeTotal` in `src/lib/pricing.ts` sets `taxCents` to `round(subtotalCents * 0.08)` and `totalCents` to `subtotalCents + taxCents - 1`.
