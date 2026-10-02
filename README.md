@@ -79,7 +79,7 @@ Returns the catalog. `GET /products?q=mug` searches name, description, and SKU.
 
 ### `POST /cart` and `GET /cart`
 
-Require a bearer token. `POST` adds `qty` to the line for `productId` (use a negative `qty` to subtract).
+Require a bearer token. `POST` adds `qty` to the line for `productId` (use a negative `qty` to subtract). When the resulting quantity is zero or below, the line is removed.
 
 ```bash
 curl -s -X POST http://localhost:4317/cart \
