@@ -113,7 +113,18 @@
         box-shadow: var(--shadow);
         position: sticky;
         top: 16px;
+        max-height: calc(100vh - 168px);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
       }
+      .panel > .panel-block:first-child {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      #cart { overflow: auto; min-height: 0; }
       .panel-block { padding: 16px 16px 18px; }
       .panel-block + .panel-block { border-top: 1px solid var(--line); }
       .panel-head {
@@ -325,7 +336,8 @@
         main.wrap { grid-template-columns: 1fr; }
         .header-inner { flex-direction: column; align-items: flex-start; }
         .session { justify-content: flex-start; }
-        .panel { position: static; }
+        .panel { position: static; max-height: none; overflow: visible; display: block; }
+        #cart { overflow: visible; }
       }
       @media (prefers-reduced-motion: reduce) {
         .card, button { transition: none; }
