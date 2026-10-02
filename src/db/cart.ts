@@ -73,13 +73,14 @@ export async function addCartItem(userId: string, productId: string, qty: number
 
 export async function getCart(userId: string): Promise<CartLine[]> {
   if (config.driver === "sqlite") {
+    // rowid keeps insertion order. Sorting by name reordered lines after each cart reload.
     const rows = getSqlite()
       .prepare(
         `SELECT c.id, c.product_id, c.qty, p.name, p.sku, p.price_cents
          FROM cart_items c
          JOIN products p ON p.id = c.product_id
          WHERE c.user_id = ?
-         ORDER BY p.name COLLATE NOCASE`,
+         ORDER BY c.rowid`,
       )
       .all(userId);
     return rows.map((row) => mapCartLine(asRecord(row)));
