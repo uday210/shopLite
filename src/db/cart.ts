@@ -3,6 +3,17 @@ import { config } from "../config.js";
 import type { CartLine } from "../types.js";
 import { getSqlite, getSupabase } from "./client.js";
 import { asRecord, mapCartLine } from "./map.js";
+import { getProduct } from "./products.js";
+
+export class CartStockError extends Error {
+  readonly stock: number;
+
+  constructor(stock: number) {
+    super(`Only ${stock} in stock`);
+    this.name = "CartStockError";
+    this.stock = stock;
+  }
+}
 
 type CartRow = {
   id: string;
@@ -33,6 +44,13 @@ async function findCartRow(userId: string, productId: string): Promise<CartRow |
 export async function addCartItem(userId: string, productId: string, qty: number): Promise<void> {
   const existing = await findCartRow(userId, productId);
   const nextQty = (existing?.qty ?? 0) + qty;
+
+  if (nextQty > 0) {
+    const product = await getProduct(productId);
+    if (product && nextQty > product.stock) {
+      throw new CartStockError(product.stock);
+    }
+  }
 
   if (nextQty <= 0) {
     if (!existing) return;
@@ -76,7 +94,7 @@ export async function getCart(userId: string): Promise<CartLine[]> {
     // rowid keeps insertion order. Sorting by name reordered lines after each cart reload.
     const rows = getSqlite()
       .prepare(
-        `SELECT c.id, c.product_id, c.qty, p.name, p.sku, p.price_cents
+        `SELECT c.id, c.product_id, c.qty, p.name, p.sku, p.price_cents, p.stock
          FROM cart_items c
          JOIN products p ON p.id = c.product_id
          WHERE c.user_id = ?
@@ -97,7 +115,7 @@ export async function getCart(userId: string): Promise<CartLine[]> {
   const ids = items.map((item) => String(item.product_id));
   const products = await getSupabase()
     .from("products")
-    .select("id, name, sku, price_cents")
+    .select("id, name, sku, price_cents, stock")
     .in("id", ids);
   if (products.error) throw new Error(products.error.message);
   const byId = new Map((products.data ?? []).map((product) => [String(product.id), product]));
@@ -113,6 +131,7 @@ export async function getCart(userId: string): Promise<CartLine[]> {
         name: product.name,
         sku: product.sku,
         price_cents: product.price_cents,
+        stock: product.stock,
       }),
     ];
   });

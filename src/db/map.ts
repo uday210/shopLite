@@ -24,6 +24,7 @@ export function mapCartLine(row: Record<string, unknown>): CartLine {
     sku: String(row.sku),
     qty: Number(row.qty),
     unitPriceCents: Number(row.price_cents ?? row.unitPriceCents),
+    stock: Number(row.stock),
   };
 }
 

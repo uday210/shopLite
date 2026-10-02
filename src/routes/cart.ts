@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { addCartItem, getCart } from "../db/cart.js";
+import { addCartItem, CartStockError, getCart } from "../db/cart.js";
 import { requireAuth } from "../middleware/auth.js";
 import type { AppEnv } from "../types.js";
 
@@ -35,10 +35,14 @@ cartRoutes.post("/cart", async (c) => {
 
   try {
     // Negative qty subtracts. A resulting quantity of 0 or below deletes the line.
+    // A result above product stock is rejected before the line is written.
     await addCartItem(userId, productId, qty);
     const items = await getCart(userId);
     return c.json({ ok: true, items });
-  } catch {
+  } catch (error) {
+    if (error instanceof CartStockError) {
+      return c.json({ error: error.message }, 400);
+    }
     // INTENTIONAL DEFECT: a cart database error is reported as success.
     return c.json({ ok: true });
   }
