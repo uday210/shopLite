@@ -50,6 +50,7 @@
         cursor: pointer;
       }
       button.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+      button.danger { background: var(--clay); color: var(--card); border-color: transparent; }
       .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
       .card { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
       .price { color: var(--clay); font-variant-numeric: tabular-nums; }
@@ -211,7 +212,7 @@
 
           const remove = document.createElement("button");
           remove.type = "button";
-          remove.className = "ghost";
+          remove.className = "danger";
           remove.textContent = "Remove";
           remove.setAttribute("aria-label", "Remove " + item.name);
           remove.addEventListener("click", () => adjustCart(item.productId, -item.qty));
