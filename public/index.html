@@ -50,7 +50,16 @@
         cursor: pointer;
       }
       button.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
-      button.danger { background: var(--clay); color: var(--card); border-color: transparent; }
+      button.danger {
+        background: var(--clay);
+        color: var(--card);
+        border-color: transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+      }
+      button.danger svg { width: 14px; height: 14px; flex: none; display: block; }
       .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
       .card { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
       .price { color: var(--clay); font-variant-numeric: tabular-nums; }
@@ -111,7 +120,31 @@
       </aside>
     </main>
     <script>
-      const state = { token: "", userId: "demo_user" };
+      const state = { token: "", userId: "demo_user", cartOrder: [] };
+
+      function rememberCartProduct(productId) {
+        if (productId && !state.cartOrder.includes(productId)) state.cartOrder.push(productId);
+      }
+
+      // Quantity updates re-fetch the cart. Keep the order items were added in,
+      // even when the payload comes back sorted by name or in an unstable row order.
+      function stableCartItems(items) {
+        const incoming = new Map(items.map((item) => [item.productId, item]));
+        const ordered = [];
+        for (const productId of state.cartOrder) {
+          const item = incoming.get(productId);
+          if (!item) continue;
+          ordered.push(item);
+          incoming.delete(productId);
+        }
+        for (const item of items) {
+          if (!incoming.has(item.productId)) continue;
+          ordered.push(item);
+          incoming.delete(item.productId);
+        }
+        state.cartOrder = ordered.map((item) => item.productId);
+        return ordered;
+      }
       const productsEl = document.querySelector("#products");
       const cartEl = document.querySelector("#cart");
       const outputEl = document.querySelector("#output");
@@ -181,12 +214,13 @@
       }
 
       function renderCart(items) {
+        const ordered = stableCartItems(items);
         cartEl.replaceChildren();
-        if (!items.length) {
+        if (!ordered.length) {
           cartEl.textContent = "Cart is empty.";
           return;
         }
-        for (const item of items) {
+        for (const item of ordered) {
           const row = document.createElement("div");
           row.className = "line";
           const main = document.createElement("div");
@@ -213,8 +247,21 @@
           const remove = document.createElement("button");
           remove.type = "button";
           remove.className = "danger";
-          remove.textContent = "Remove";
           remove.setAttribute("aria-label", "Remove " + item.name);
+          const removeIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          removeIcon.setAttribute("viewBox", "0 0 16 16");
+          removeIcon.setAttribute("aria-hidden", "true");
+          removeIcon.setAttribute("focusable", "false");
+          const removePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          removePath.setAttribute("fill", "currentColor");
+          removePath.setAttribute(
+            "d",
+            "M5.4 1.6h5.2l.6 1.2H14v1.4H2V2.8h2.8l.6-1.2zM3.2 5.2h9.6l-.7 8.6H3.9L3.2 5.2zm2.2 1.3v5.6h1.2V6.5H5.4zm3 0v5.6h1.2V6.5H8.4z",
+          );
+          removeIcon.append(removePath);
+          const removeLabel = document.createElement("span");
+          removeLabel.textContent = "Remove";
+          remove.append(removeIcon, removeLabel);
           remove.addEventListener("click", () => adjustCart(item.productId, -item.qty));
 
           controls.append(decrease, increase, remove);
@@ -251,6 +298,7 @@
       }
 
       async function addToCart(productId) {
+        rememberCartProduct(productId);
         await adjustCart(productId, 1);
       }
 

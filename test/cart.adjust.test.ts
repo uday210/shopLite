@@ -111,6 +111,30 @@ describe("POST /cart quantity adjust", () => {
     assert.equal(storedQty(userId, "prod_tote"), null);
   });
 
+  test("keeps lines in insertion order when a quantity changes", async () => {
+    const userId = "cart_order";
+    const token = await tokenFor(userId);
+
+    await postCart(token, "prod_notebook", 1);
+    await postCart(token, "prod_tote", 1);
+    await postCart(token, "prod_mug", 1);
+
+    const items = await postCart(token, "prod_tote", 1);
+    assert.deepEqual(
+      items.map((item) => item.productId),
+      ["prod_notebook", "prod_tote", "prod_mug"],
+    );
+    assert.equal(items.find((item) => item.productId === "prod_tote")?.qty, 2);
+
+    const listed = await app.request("/cart", { headers: { authorization: `Bearer ${token}` } });
+    assert.equal(listed.status, 200);
+    const listedBody = (await listed.json()) as { items: CartItem[] };
+    assert.deepEqual(
+      listedBody.items.map((item) => item.productId),
+      ["prod_notebook", "prod_tote", "prod_mug"],
+    );
+  });
+
   test("rejects a missing productId and a non-integer qty", async () => {
     const token = await tokenFor("cart_validation");
 
