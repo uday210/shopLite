@@ -233,7 +233,19 @@
         border: 1px solid var(--line);
       }
       .stock.low { color: var(--clay-deep); background: #f8ebe6; border-color: #f0cfc4; }
+      .stock.out { color: var(--muted); background: #f3eee6; }
       .card button { margin-top: 4px; }
+      button.add-cart:disabled {
+        background: #efe8dc;
+        color: var(--muted);
+        border-color: var(--line);
+        cursor: not-allowed;
+      }
+      button.add-cart:disabled:hover,
+      button.add-cart:disabled:active {
+        background: #efe8dc;
+        transform: none;
+      }
       .cart-chip {
         display: inline-grid;
         place-items: center;
@@ -594,6 +606,12 @@
         return tones[hash];
       }
 
+      function catalogStock(product) {
+        const stock = Number(product.stock);
+        if (!Number.isFinite(stock)) return 0;
+        return Math.floor(stock);
+      }
+
       function setCartCount(count) {
         const label = count + (count === 1 ? " item" : " items");
         cartCountEl.textContent = label;
@@ -665,17 +683,25 @@
           const sku = document.createElement("span");
           sku.className = "sku";
           sku.textContent = product.sku;
+          const stockCount = catalogStock(product);
+          const inStock = stockCount > 0;
           const stock = document.createElement("span");
-          stock.className = product.stock > 0 && product.stock <= 8 ? "stock low" : "stock";
-          stock.textContent = "stock " + product.stock;
+          stock.className = !inStock ? "stock out" : stockCount <= 8 ? "stock low" : "stock";
+          stock.textContent = inStock ? "stock " + stockCount : "Out of stock";
           meta.append(sku, stock);
           const price = document.createElement("div");
           price.className = "price";
           price.textContent = money(product.priceCents);
           const button = document.createElement("button");
           button.type = "button";
-          button.textContent = "Add to cart";
-          button.addEventListener("click", () => addToCart(product.id));
+          button.className = "add-cart";
+          if (inStock) {
+            button.textContent = "Add to cart";
+            button.addEventListener("click", () => addToCart(product.id));
+          } else {
+            button.textContent = "Out of stock";
+            button.disabled = true;
+          }
           card.append(mark, title, desc, meta, price, button);
           productsEl.append(card);
         }
