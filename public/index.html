@@ -211,7 +211,6 @@
 
           const remove = document.createElement("button");
           remove.type = "button";
-          remove.className = "ghost";
           remove.textContent = "Remove";
           remove.setAttribute("aria-label", "Remove " + item.name);
           remove.addEventListener("click", () => adjustCart(item.productId, -item.qty));
