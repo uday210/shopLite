@@ -3,7 +3,7 @@ import { config } from "../config.js";
 import type { Order, OrderLine } from "../types.js";
 import { getSqlite, getSupabase } from "./client.js";
 import { asRecord, mapOrder } from "./map.js";
-import { getProduct } from "./products.js";
+import { decrementProductStock, getProduct } from "./products.js";
 
 export type CreateOrderInput = {
   userId: string;
@@ -25,8 +25,6 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
       return { productId: product.id, stock: product.stock, qty: line.qty };
     }),
   );
-  void stockSnapshot;
-
   const order: Order = {
     id: `ord_${randomUUID()}`,
     userId: input.userId,
@@ -71,7 +69,12 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
     if (error) throw new Error(error.message);
   }
 
-  // INTENTIONAL DEFECT: inventory is not decremented after the order is written.
+  if (order.status === "paid") {
+    for (const line of stockSnapshot) {
+      await decrementProductStock(line.productId, line.qty);
+    }
+  }
+
   return order;
 }
 
