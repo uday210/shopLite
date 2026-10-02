@@ -90,7 +90,7 @@ curl -s -X POST http://localhost:4317/cart \
 
 ### `POST /checkout`
 
-Requires a bearer token. With no `items` array, the current cart is checked out and then cleared. `paymentToken` is any fake token such as `tok_test`. Decline tokens (`tok_decline`, `decline`, `tok_fail`, compared case-insensitively) are rejected with HTTP 402. No order is created and the cart is left in place.
+Requires a bearer token. With no `items` array, the current cart is checked out and then cleared. A paid checkout reduces each product's stock by the purchased quantity. `paymentToken` is any fake token such as `tok_test`. Decline tokens (`tok_decline`, `decline`, `tok_fail`, compared case-insensitively) are rejected with HTTP 402. No order is created, the cart is left in place, and stock is unchanged.
 
 Optional `items` can override the cart. If a line includes `unitPriceCents`, that integer is what gets charged.
 

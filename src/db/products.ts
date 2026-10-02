@@ -37,3 +37,18 @@ export async function getProduct(id: string): Promise<Product | null> {
   if (error) throw new Error(error.message);
   return data ? mapProduct(asRecord(data)) : null;
 }
+
+export async function decrementProductStock(productId: string, qty: number): Promise<void> {
+  if (config.driver === "sqlite") {
+    getSqlite().prepare("UPDATE products SET stock = stock - ? WHERE id = ?").run(qty, productId);
+    return;
+  }
+
+  const product = await getProduct(productId);
+  if (!product) throw new Error(`Unknown product: ${productId}`);
+  const { error } = await getSupabase()
+    .from("products")
+    .update({ stock: product.stock - qty })
+    .eq("id", productId);
+  if (error) throw new Error(error.message);
+}
