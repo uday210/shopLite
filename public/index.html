@@ -24,6 +24,7 @@
         --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
         --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
+      [hidden] { display: none !important; }
       * { box-sizing: border-box; }
       body {
         margin: 0;
@@ -94,13 +95,83 @@
         color: var(--muted);
       }
       .pill strong { color: var(--ink); font-weight: 650; }
-      main.wrap {
+      main.store {
         display: grid;
         grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.9fr);
         gap: 22px;
         padding: 22px 0 28px;
         align-items: start;
       }
+      .nav-link.active {
+        background: var(--accent-soft);
+        color: var(--accent-deep);
+        border-color: #cfe6dc;
+      }
+      .nav-link.active:hover { background: #d9efe7; }
+      .login-page {
+        width: min(460px, calc(100% - 32px));
+        margin: 28px auto 40px;
+      }
+      .login-card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        padding: 22px 22px 20px;
+      }
+      .login-card h2 { margin-bottom: 4px; }
+      .login-form { margin-top: 16px; }
+      #login-form button:disabled { cursor: wait; opacity: 0.75; }
+      .credentials {
+        margin-top: 16px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px dashed var(--line);
+        background: #fbf8f2;
+        display: grid;
+        gap: 4px;
+      }
+      .credentials p { margin: 0; }
+      .credentials code {
+        font-family: var(--mono);
+        font-size: 0.86em;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 1px 6px;
+      }
+      .orders-page { padding: 22px 0 28px; }
+      .order-list { display: grid; gap: 12px; }
+      .order-card { gap: 10px; }
+      .order-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .order-copy { min-width: 0; display: grid; gap: 6px; }
+      .order-id {
+        font-family: var(--mono);
+        font-size: 0.82rem;
+        font-weight: 650;
+        word-break: break-all;
+      }
+      .order-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .order-when {
+        color: var(--muted);
+        font-family: var(--sans);
+        font-size: 0.8rem;
+      }
+      .order-lines {
+        margin: 0;
+        padding-left: 1.15rem;
+      }
+      .order-lines li { margin: 2px 0; }
       .section-head { margin-bottom: 12px; }
       .section-head p { margin: 4px 0 0; color: var(--muted); }
       .panel, .card, .toolbar {
@@ -475,7 +546,7 @@
       }
       .site-footer .wrap { padding: 16px 0 22px; }
       @media (max-width: 800px) {
-        main.wrap { grid-template-columns: 1fr; }
+        main.store { grid-template-columns: 1fr; }
         .header-inner { flex-direction: column; align-items: flex-start; }
         .session { justify-content: flex-start; }
         .panel { position: static; max-height: none; overflow: visible; display: block; }
@@ -495,16 +566,41 @@
           <div>
             <p class="eyebrow">Everyday goods</p>
             <h1>ShopLite</h1>
-            <p class="lede">Browse the catalog, fill a cart, and check out with a fake payment token.</p>
+            <p class="lede">Sign in to browse the catalog, check out, and review previous orders.</p>
           </div>
         </div>
-        <div class="session">
-          <span class="pill">Account <strong id="who">Signing in…</strong></span>
+        <div class="session" id="app-nav" hidden>
+          <button class="ghost nav-link" id="nav-home" type="button">Home</button>
+          <button class="ghost nav-link" id="nav-orders" type="button">Previous orders</button>
+          <span class="pill">Account <strong id="who"></strong></span>
           <span class="pill">Cart <strong id="cart-count">0 items</strong></span>
+          <button class="ghost" id="sign-out" type="button">Sign out</button>
         </div>
       </div>
     </header>
-    <main class="wrap">
+    <section class="login-page" id="screen-login">
+      <div class="login-card">
+        <p class="eyebrow">Account</p>
+        <h2>Sign in</h2>
+        <p class="lede">Use a test account to open the store and your previous orders.</p>
+        <form class="stack login-form" id="login-form">
+          <label class="field">Username or email
+            <input id="login-id" name="username" autocomplete="username" required />
+          </label>
+          <label class="field">Password
+            <input id="login-password" name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <button type="submit">Sign in</button>
+        </form>
+        <div class="status" id="login-status" role="status"></div>
+        <div class="credentials">
+          <p class="eyebrow">Test accounts</p>
+          <p><strong>demo</strong> · demo@shoplite.test · <code>shoplite-demo</code></p>
+          <p><strong>guest</strong> · guest@shoplite.test · <code>shoplite-guest</code></p>
+        </div>
+      </div>
+    </section>
+    <main class="wrap store" id="screen-home" hidden>
       <section>
         <div class="section-head">
           <h2>Catalog</h2>
@@ -552,11 +648,21 @@
         </div>
       </aside>
     </main>
+    <main class="wrap orders-page" id="screen-orders" hidden>
+      <div class="section-head">
+        <h2>Previous orders</h2>
+        <p>Orders placed with this account, newest first.</p>
+      </div>
+      <div class="order-list" id="orders"></div>
+      <div class="status" id="orders-status" role="status"></div>
+    </main>
     <footer class="site-footer">
       <div class="wrap">ShopLite demo storefront. Payments are simulated.</div>
     </footer>
     <script>
-      const state = { token: "", userId: "demo_user", cartOrder: [] };
+      const SESSION_KEY = "shoplite.session";
+      const state = { token: "", userId: "", cartOrder: [] };
+      let homeLoaded = false;
 
       function rememberCartProduct(productId) {
         if (productId && !state.cartOrder.includes(productId)) state.cartOrder.push(productId);
@@ -645,15 +751,217 @@
         if (!res.ok) {
           const error = new Error(data.message || data.error || ("Request failed (" + res.status + ")"));
           error.payload = data;
+          error.status = res.status;
           throw error;
         }
         return data;
       }
 
-      async function signIn() {
-        const data = await api("/auth/token", { method: "POST", body: { userId: state.userId } });
-        state.token = data.token;
-        whoEl.textContent = data.userId;
+      const loginEl = document.querySelector("#screen-login");
+      const homeEl = document.querySelector("#screen-home");
+      const ordersScreenEl = document.querySelector("#screen-orders");
+      const appNavEl = document.querySelector("#app-nav");
+      const ordersListEl = document.querySelector("#orders");
+      const ordersStatusEl = document.querySelector("#orders-status");
+      const loginStatusEl = document.querySelector("#login-status");
+
+      function setLoginStatus(message) {
+        loginStatusEl.textContent = message || "";
+      }
+
+      function setOrdersStatus(message) {
+        ordersStatusEl.textContent = message || "";
+      }
+
+      function readSession() {
+        try {
+          const raw = sessionStorage.getItem(SESSION_KEY);
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          if (!parsed || typeof parsed.token !== "string" || typeof parsed.userId !== "string") return null;
+          if (!parsed.token || !parsed.userId) return null;
+          return parsed;
+        } catch {
+          return null;
+        }
+      }
+
+      function writeSession() {
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify({ token: state.token, userId: state.userId }));
+      }
+
+      function clearSession() {
+        sessionStorage.removeItem(SESSION_KEY);
+        state.token = "";
+        state.userId = "";
+        state.cartOrder = [];
+        homeLoaded = false;
+      }
+
+      function screenFromHash() {
+        if (location.hash === "#orders") return "orders";
+        if (location.hash === "#login") return "login";
+        return "home";
+      }
+
+      function applyScreen(name) {
+        const loggedIn = Boolean(state.token);
+        const screen = !loggedIn ? "login" : name === "orders" ? "orders" : "home";
+        loginEl.hidden = screen !== "login";
+        homeEl.hidden = screen !== "home";
+        ordersScreenEl.hidden = screen !== "orders";
+        appNavEl.hidden = !loggedIn;
+        document.querySelector("#nav-home").classList.toggle("active", screen === "home");
+        document.querySelector("#nav-orders").classList.toggle("active", screen === "orders");
+        document.querySelector("#nav-home").setAttribute("aria-current", screen === "home" ? "page" : "false");
+        document.querySelector("#nav-orders").setAttribute("aria-current", screen === "orders" ? "page" : "false");
+        if (screen === "home") {
+          ensureHome().catch((error) => setStatus(error.message));
+        }
+        if (screen === "orders") {
+          loadOrders().catch((error) => setOrdersStatus(error.message));
+        }
+      }
+
+      function navigate(screen) {
+        const hash = screen === "orders" ? "#orders" : screen === "login" ? "#login" : "#home";
+        if (location.hash === hash) applyScreen(screenFromHash());
+        else location.hash = hash;
+      }
+
+      async function ensureHome() {
+        if (!state.token || homeLoaded) return;
+        try {
+          await Promise.all([loadProducts(), loadCart()]);
+          homeLoaded = true;
+        } catch (error) {
+          homeLoaded = false;
+          if (error.status === 401) {
+            signOut();
+            return;
+          }
+          throw error;
+        }
+      }
+
+      function signOut() {
+        clearSession();
+        whoEl.textContent = "";
+        setCartCount(0);
+        cartEl.replaceChildren();
+        cartSummaryEl.replaceChildren();
+        cartSummaryEl.hidden = true;
+        productsEl.replaceChildren();
+        ordersListEl.replaceChildren();
+        setLoginStatus("");
+        navigate("login");
+      }
+
+      async function login(event) {
+        event.preventDefault();
+        setLoginStatus("");
+        const loginId = document.querySelector("#login-id").value.trim();
+        const password = document.querySelector("#login-password").value;
+        if (!loginId || !password) {
+          setLoginStatus("Enter a username or email and a password.");
+          return;
+        }
+        const button = event.currentTarget.querySelector("button[type=submit]");
+        button.disabled = true;
+        try {
+          const data = await api("/auth/login", {
+            method: "POST",
+            anonymous: true,
+            body: { username: loginId, password },
+          });
+          state.token = data.token;
+          state.userId = data.userId;
+          writeSession();
+          whoEl.textContent = data.userId;
+          document.querySelector("#login-password").value = "";
+          homeLoaded = false;
+          navigate("home");
+        } catch (error) {
+          setLoginStatus(error.status === 401 ? "Those credentials were not recognized." : error.message);
+        } finally {
+          button.disabled = false;
+        }
+      }
+
+      function formatWhen(iso) {
+        const date = new Date(iso);
+        if (Number.isNaN(date.getTime())) return iso || "";
+        return date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+      }
+
+      function renderOrders(orders) {
+        ordersListEl.replaceChildren();
+        if (!orders.length) {
+          const empty = document.createElement("div");
+          empty.className = "empty empty-cart";
+          const title = document.createElement("p");
+          title.className = "empty-title";
+          title.textContent = "No previous orders";
+          const copy = document.createElement("p");
+          copy.className = "empty-copy";
+          copy.textContent = "Check out from the home screen and the order will show up here.";
+          empty.append(title, copy);
+          ordersListEl.append(empty);
+          return;
+        }
+        for (const order of orders) {
+          const card = document.createElement("article");
+          card.className = "card order-card";
+          const head = document.createElement("div");
+          head.className = "order-head";
+          const copy = document.createElement("div");
+          copy.className = "order-copy";
+          const id = document.createElement("strong");
+          id.className = "order-id";
+          id.textContent = order.id;
+          const meta = document.createElement("div");
+          meta.className = "order-meta";
+          const status = document.createElement("span");
+          status.className = "stock";
+          status.textContent = order.status || "placed";
+          const when = document.createElement("time");
+          when.className = "order-when";
+          if (order.createdAt) when.dateTime = order.createdAt;
+          when.textContent = formatWhen(order.createdAt);
+          meta.append(status, when);
+          copy.append(id, meta);
+          const total = document.createElement("div");
+          total.className = "price";
+          total.textContent = money(order.totalCents);
+          head.append(copy, total);
+          const list = document.createElement("ul");
+          list.className = "order-lines";
+          for (const item of order.items || []) {
+            const li = document.createElement("li");
+            li.textContent = item.name + " × " + item.qty + " · " + money(item.unitPriceCents) + " each";
+            list.append(li);
+          }
+          const totals = document.createElement("p");
+          totals.className = "hint";
+          totals.textContent =
+            "Subtotal " + money(order.subtotalCents) + " · tax " + money(order.taxCents);
+          card.append(head, list, totals);
+          ordersListEl.append(card);
+        }
+      }
+
+      async function loadOrders() {
+        setOrdersStatus("");
+        try {
+          const data = await api("/orders");
+          renderOrders(Array.isArray(data.orders) ? data.orders : []);
+        } catch (error) {
+          if (error.status === 401) {
+            signOut();
+            return;
+          }
+          throw error;
+        }
       }
 
       function renderProducts(products) {
@@ -905,10 +1213,25 @@
       });
       document.querySelector("#checkout").addEventListener("click", checkout);
       document.querySelector("#lookup-form").addEventListener("submit", lookup);
+      document.querySelector("#login-form").addEventListener("submit", login);
+      document.querySelector("#nav-home").addEventListener("click", () => navigate("home"));
+      document.querySelector("#nav-orders").addEventListener("click", () => navigate("orders"));
+      document.querySelector("#sign-out").addEventListener("click", signOut);
+      window.addEventListener("hashchange", () => applyScreen(screenFromHash()));
 
-      signIn()
-        .then(() => Promise.all([loadProducts(), loadCart()]))
-        .catch((error) => setStatus(error.message));
+      const existing = readSession();
+      if (existing) {
+        state.token = existing.token;
+        state.userId = existing.userId;
+        whoEl.textContent = existing.userId;
+        const hash = location.hash === "#orders" ? "#orders" : "#home";
+        if (location.hash === hash) applyScreen(screenFromHash());
+        else location.hash = hash;
+      } else if (location.hash !== "#login") {
+        location.hash = "#login";
+      } else {
+        applyScreen("login");
+      }
     </script>
   </body>
 </html>
