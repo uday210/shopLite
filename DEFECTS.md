@@ -12,3 +12,4 @@ These bugs are part of the ShopLite seed for the support-bot pipeline. Leave the
 8. **Oversell race.** `createOrder` in `src/db/orders.ts` reads stock with no transaction and no row lock, then inserts the order. Concurrent checkouts are not serialized.
 9. **Stack traces on 500.** The error middleware in `src/middleware/errors.ts` returns `message` and `stack` to the client for unhandled errors.
 10. **Tax total is off by one cent.** `computeTotal` in `src/lib/pricing.ts` sets `taxCents` to `round(subtotalCents * 0.08)` and `totalCents` to `subtotalCents + taxCents - 1`.
+11. **Fixed: zero-stock products no longer offer Add to cart.** The catalog in `public/index.html` renders a disabled "Out of stock" control when `stock` is missing, not finite, or `0` or below. Products with stock above zero still use Add to cart. `POST /cart` already rejects a quantity above `product.stock`.
