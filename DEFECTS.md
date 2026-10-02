@@ -3,7 +3,7 @@
 These bugs are part of the ShopLite seed for the support-bot pipeline. Leave them in place.
 
 1. **Client-trusted price.** `POST /checkout` charges `unitPriceCents` from the request body when that field is present, instead of the catalog price. See `src/routes/checkout.ts`.
-2. **Inventory is not decremented.** `createOrder` in `src/db/orders.ts` writes the order and does not reduce `products.stock`.
+2. **Fixed: inventory is decremented after a paid order.** `createOrder` in `src/db/orders.ts` reduces `products.stock` by each line quantity when the order status is `paid`. Declined payments return before `createOrder`, so they leave stock unchanged.
 3. **Fixed: zero and negative quantities are no longer stored.** `addCartItem` in `src/db/cart.ts` deletes the cart line when the resulting quantity is `0` or below. Subtracting from a missing line is a no-op. `POST /cart` still accepts a negative integer so the client can decrease or remove a line.
 4. **Auth bypass on order lookup.** `GET /orders/:id` does not require a bearer token, so any caller who knows an order id can read it. See `src/routes/orders.ts`.
 5. **SQL injection on product search.** `GET /products?q=` concatenates `q` into the SQL text in `src/routes/products.ts`. SQLite executes that string directly. When Supabase is configured, the same string is passed to the `shoplite_query` function defined in `migrations/001_init.sql`.
