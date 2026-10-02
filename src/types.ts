@@ -14,6 +14,8 @@ export type CartLine = {
   sku: string;
   qty: number;
   unitPriceCents: number;
+  /** Units still available to sell. The cart picklist cannot exceed this. */
+  stock: number;
 };
 
 export type OrderLine = {
