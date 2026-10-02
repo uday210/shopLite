@@ -34,7 +34,7 @@ cartRoutes.post("/cart", async (c) => {
   }
 
   try {
-    // INTENTIONAL DEFECT: zero and negative quantities are accepted and stored.
+    // Negative qty subtracts. A resulting quantity of 0 or below deletes the line.
     await addCartItem(userId, productId, qty);
     const items = await getCart(userId);
     return c.json({ ok: true, items });

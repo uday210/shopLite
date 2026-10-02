@@ -34,6 +34,17 @@ export async function addCartItem(userId: string, productId: string, qty: number
   const existing = await findCartRow(userId, productId);
   const nextQty = (existing?.qty ?? 0) + qty;
 
+  if (nextQty <= 0) {
+    if (!existing) return;
+    if (config.driver === "sqlite") {
+      getSqlite().prepare("DELETE FROM cart_items WHERE id = ?").run(existing.id);
+      return;
+    }
+    const { error } = await getSupabase().from("cart_items").delete().eq("id", existing.id);
+    if (error) throw new Error(error.message);
+    return;
+  }
+
   if (config.driver === "sqlite") {
     if (existing) {
       getSqlite().prepare("UPDATE cart_items SET qty = ? WHERE id = ?").run(nextQty, existing.id);
