@@ -36,7 +36,7 @@ function authHeaders(token: string): Record<string, string> {
   };
 }
 
-type CartItem = { productId: string; qty: number };
+type CartItem = { productId: string; qty: number; stock?: number };
 
 async function postCart(token: string, productId: string, qty: number): Promise<CartItem[]> {
   const res = await app.request("/cart", {
@@ -155,5 +155,48 @@ describe("POST /cart quantity adjust", () => {
     assert.equal(fractional.status, 400);
     const fractionalBody = (await fractional.json()) as { error?: string };
     assert.equal(fractionalBody.error, "qty must be an integer");
+  });
+
+  test("returns each line with the product stock so the cart can offer 0 through that max", async () => {
+    const token = await tokenFor("cart_stock_field");
+    const items = await postCart(token, "prod_lamp", 2);
+    const lamp = items.find((item) => item.productId === "prod_lamp");
+    assert.equal(lamp?.qty, 2);
+    assert.equal(lamp?.stock, 12);
+  });
+
+  test("rejects a quantity above available stock and leaves the line unchanged", async () => {
+    const userId = "cart_stock_cap";
+    const token = await tokenFor(userId);
+    await postCart(token, "prod_lamp", 12);
+
+    const over = await app.request("/cart", {
+      method: "POST",
+      headers: authHeaders(token),
+      body: JSON.stringify({ productId: "prod_lamp", qty: 1 }),
+    });
+    assert.equal(over.status, 400);
+    const overBody = (await over.json()) as { error?: string };
+    assert.equal(overBody.error, "Only 12 in stock");
+    assert.equal(storedQty(userId, "prod_lamp"), 12);
+
+    const initial = await app.request("/cart", {
+      method: "POST",
+      headers: authHeaders(await tokenFor("cart_stock_initial")),
+      body: JSON.stringify({ productId: "prod_lamp", qty: 13 }),
+    });
+    assert.equal(initial.status, 400);
+    assert.equal(storedQty("cart_stock_initial", "prod_lamp"), null);
+  });
+
+  test("allows setting quantity to the stock limit and removing the line with a full negative delta", async () => {
+    const userId = "cart_stock_exact";
+    const token = await tokenFor(userId);
+    const atLimit = await postCart(token, "prod_lamp", 12);
+    assert.equal(atLimit.find((item) => item.productId === "prod_lamp")?.qty, 12);
+
+    const removed = await postCart(token, "prod_lamp", -12);
+    assert.equal(removed.find((item) => item.productId === "prod_lamp"), undefined);
+    assert.equal(storedQty(userId, "prod_lamp"), null);
   });
 });

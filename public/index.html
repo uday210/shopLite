@@ -165,7 +165,7 @@
       }
       button:hover { background: var(--accent-deep); }
       button:active { transform: translateY(1px); }
-      button:focus-visible, input:focus-visible {
+      button:focus-visible, input:focus-visible, select:focus-visible {
         outline: 2px solid var(--accent);
         outline-offset: 2px;
       }
@@ -308,37 +308,46 @@
         align-items: center;
         justify-content: space-between;
       }
-      .qty-stepper {
+      .qty-field {
         display: inline-flex;
         align-items: center;
-        gap: 0;
+        gap: 8px;
+        min-width: 0;
+        color: var(--muted);
+        font-family: var(--sans);
+        font-size: 0.75rem;
+        font-weight: 650;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .qty-select {
+        appearance: none;
+        -webkit-appearance: none;
+        min-width: 4.75rem;
+        margin: 0;
+        padding: 7px 30px 7px 12px;
         border: 1px solid var(--line);
         border-radius: 999px;
-        background: #fbf8f2;
-        padding: 3px;
-      }
-      .qty-stepper button {
-        width: 32px;
-        height: 32px;
-        padding: 0;
-        border: none;
-        border-radius: 999px;
-        background: #fff;
+        background-color: #fff;
+        background-image:
+          linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+          linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+        background-position: calc(100% - 16px) 55%, calc(100% - 11px) 55%;
+        background-size: 5px 5px, 5px 5px;
+        background-repeat: no-repeat;
         color: var(--ink);
-        line-height: 1;
-        font-size: 1.05rem;
+        font-family: var(--sans);
+        font-size: 0.95rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0;
+        text-transform: none;
+        line-height: 1.2;
+        cursor: pointer;
         box-shadow: 0 1px 0 rgba(62, 42, 22, 0.05);
       }
-      .qty-stepper button:hover { background: var(--accent-soft); color: var(--accent-deep); }
-      .qty-value {
-        min-width: 2rem;
-        padding: 0 2px;
-        text-align: center;
-        font-variant-numeric: tabular-nums;
-        font-family: var(--sans);
-        font-weight: 700;
-        font-size: 0.95rem;
-      }
+      .qty-select:hover { border-color: #cfc0ab; background-color: var(--accent-soft); }
+      .qty-select:disabled { cursor: wait; opacity: 0.7; }
       .cart-summary {
         flex: none;
         margin-top: 12px;
@@ -712,32 +721,35 @@
           name.textContent = item.name;
           const meta = document.createElement("div");
           meta.className = "line-meta";
-          meta.textContent = item.sku + " · " + money(item.unitPriceCents) + " each";
+          const stockLabel = Number.isFinite(Number(item.stock))
+            ? " · " + item.stock + " available"
+            : "";
+          meta.textContent = item.sku + " · " + money(item.unitPriceCents) + " each" + stockLabel;
           copy.append(name, meta);
 
           const controls = document.createElement("div");
           controls.className = "qty-controls";
 
-          const decrease = document.createElement("button");
-          decrease.type = "button";
-          decrease.textContent = "−";
-          decrease.setAttribute("aria-label", "Decrease " + item.name);
-          decrease.addEventListener("click", () => adjustCart(item.productId, -1));
-
-          const increase = document.createElement("button");
-          increase.type = "button";
-          increase.textContent = "+";
-          increase.setAttribute("aria-label", "Increase " + item.name);
-          increase.addEventListener("click", () => adjustCart(item.productId, 1));
-
-          const qtyValue = document.createElement("span");
-          qtyValue.className = "qty-value";
-          qtyValue.textContent = String(item.qty);
-          qtyValue.setAttribute("aria-label", "Quantity " + item.qty);
-
-          const stepper = document.createElement("div");
-          stepper.className = "qty-stepper";
-          stepper.append(decrease, qtyValue, increase);
+          const qtyField = document.createElement("label");
+          qtyField.className = "qty-field";
+          const qtyLabel = document.createElement("span");
+          qtyLabel.textContent = "Qty";
+          const qtySelect = document.createElement("select");
+          qtySelect.className = "qty-select";
+          qtySelect.setAttribute("aria-label", "Quantity for " + item.name + ". Choose 0 to remove.");
+          const choices = quantityChoices(item);
+          for (const qty of choices) {
+            const option = document.createElement("option");
+            option.value = String(qty);
+            option.textContent = String(qty);
+            if (qty === Number(item.qty)) option.selected = true;
+            qtySelect.append(option);
+          }
+          qtySelect.addEventListener("change", () => {
+            qtySelect.disabled = true;
+            setLineQuantity(item, Number(qtySelect.value));
+          });
+          qtyField.append(qtyLabel, qtySelect);
 
           const remove = document.createElement("button");
           remove.type = "button";
@@ -751,7 +763,7 @@
           );
           remove.addEventListener("click", () => adjustCart(item.productId, -item.qty));
 
-          controls.append(stepper, remove);
+          controls.append(qtyField, remove);
           const price = document.createElement("div");
           price.className = "price line-total";
           price.textContent = money(item.unitPriceCents * item.qty);
@@ -793,6 +805,16 @@
         renderCart(data.items);
       }
 
+      function quantityChoices(item) {
+        const current = Number(item.qty);
+        const stock = Number(item.stock);
+        const max = Number.isFinite(stock) && stock >= 0 ? Math.floor(stock) : Math.max(0, current);
+        const choices = [];
+        for (let qty = 0; qty <= max; qty += 1) choices.push(qty);
+        if (Number.isInteger(current) && current > max) choices.push(current);
+        return choices;
+      }
+
       async function adjustCart(productId, qty) {
         setStatus("");
         try {
@@ -801,7 +823,22 @@
           else await loadCart();
         } catch (error) {
           setStatus(error.message);
+          await loadCart().catch(() => {});
         }
+      }
+
+      function setLineQuantity(item, nextQty) {
+        const next = Number(nextQty);
+        const current = Number(item.qty);
+        if (!Number.isInteger(next) || next < 0 || next === current) return;
+        const stock = Number(item.stock);
+        if (Number.isFinite(stock) && next > stock) {
+          setStatus("Only " + stock + " in stock.");
+          loadCart().catch((error) => setStatus(error.message));
+          return;
+        }
+        // The cart API applies a delta. 0 removes the line, same as Remove.
+        adjustCart(item.productId, next - current);
       }
 
       async function addToCart(productId) {
