@@ -1315,7 +1315,8 @@
           copy.className = "order-copy";
           const id = document.createElement("strong");
           id.className = "order-id";
-          id.textContent = order.id;
+          const placedAt = order.createdAt ? new Date(order.createdAt) : new Date(NaN);
+          id.textContent = Number.isNaN(placedAt.getTime()) ? "Order" : formatWhen(order.createdAt);
           const meta = document.createElement("div");
           meta.className = "order-meta";
           const status = document.createElement("span");
@@ -1335,7 +1336,8 @@
           list.className = "order-lines";
           for (const item of order.items || []) {
             const li = document.createElement("li");
-            li.textContent = item.name + " × " + item.qty + " · " + money(item.unitPriceCents) + " each";
+            const lineName = typeof item.name === "string" && item.name.trim() ? item.name : "Item";
+            li.textContent = lineName + " × " + item.qty + " · " + money(item.unitPriceCents) + " each";
             list.append(li);
           }
           const totals = document.createElement("p");
