@@ -55,7 +55,14 @@ To use Supabase, set `SUPABASE_URL` and either `SUPABASE_SERVICE_KEY` or `SUPABA
 
 ## Auth
 
-`POST /auth/token` mints a bearer token for a `userId`. Send it as `Authorization: Bearer <token>` on cart and checkout. This is demo auth: there is no password check.
+The storefront signs in with `POST /auth/login` and a hardcoded test account. A successful login returns the same bearer token as `POST /auth/token`. Send it as `Authorization: Bearer <token>` on cart, checkout, and `GET /orders`.
+
+| Username | Email | Password | Token `userId` |
+| --- | --- | --- | --- |
+| `demo` | `demo@shoplite.test` | `shoplite-demo` | `demo_user` |
+| `guest` | `guest@shoplite.test` | `shoplite-guest` | `guest_user` |
+
+`POST /auth/token` still mints a bearer token for any `userId` with no password check, so existing API clients keep working.
 
 ## Endpoints
 
@@ -64,6 +71,16 @@ To use Supabase, set `SUPABASE_URL` and either `SUPABASE_SERVICE_KEY` or `SUPABA
 ```json
 { "ok": true, "service": "shoplite", "db": "sqlite" }
 ```
+
+### `POST /auth/login`
+
+```bash
+curl -s -X POST http://localhost:4317/auth/login \
+  -H 'content-type: application/json' \
+  -d '{"username":"demo","password":"shoplite-demo"}'
+```
+
+`username` accepts the account username or email. `email` is accepted when `username` is omitted.
 
 ### `POST /auth/token`
 
@@ -100,6 +117,10 @@ curl -s -X POST http://localhost:4317/checkout \
   -H 'content-type: application/json' \
   -d '{"paymentToken":"tok_test"}'
 ```
+
+### `GET /orders`
+
+Requires a bearer token. Returns `{ "orders": [...] }` for the signed-in user, newest first. An account with no checkouts gets an empty list.
 
 ### `GET /orders/:id`
 

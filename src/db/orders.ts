@@ -78,6 +78,23 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
   return order;
 }
 
+export async function listOrdersForUser(userId: string): Promise<Order[]> {
+  if (config.driver === "sqlite") {
+    const rows = getSqlite()
+      .prepare("SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC")
+      .all(userId);
+    return rows.map((row) => mapOrder(asRecord(row)));
+  }
+
+  const { data, error } = await getSupabase()
+    .from("orders")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((row) => mapOrder(asRecord(row)));
+}
+
 export async function getOrder(id: string): Promise<Order | null> {
   if (config.driver === "sqlite") {
     const row = getSqlite().prepare("SELECT * FROM orders WHERE id = ?").get(id);
