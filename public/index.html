@@ -927,7 +927,7 @@
           </div>
           <form id="note-form">
             <div class="email-box">
-              <input type="email" placeholder="Your email address" aria-label="Your email address" autocomplete="off" />
+              <input id="note-email" type="email" placeholder="Your email address" aria-label="Your email address" autocomplete="off" required />
               <button type="submit">Join the list</button>
             </div>
             <p class="note-status" id="note-status" role="status"></p>
@@ -1624,10 +1624,21 @@
       document.querySelector("#sign-out").addEventListener("click", signOut);
       document.querySelector("#bag-close").addEventListener("click", closeBag);
       document.querySelector("#bag-backdrop").addEventListener("click", closeBag);
-      document.querySelector("#note-form").addEventListener("submit", (event) => {
+      document.querySelector("#note-form").addEventListener("submit", async (event) => {
         event.preventDefault();
         const noteStatus = document.querySelector("#note-status");
-        if (noteStatus) noteStatus.textContent = "This note was not sent.";
+        const emailInput = document.querySelector("#note-email");
+        if (noteStatus) noteStatus.textContent = "";
+        const email = emailInput ? emailInput.value : "";
+        try {
+          await api("/newsletter", { method: "POST", body: { email: email } });
+          if (noteStatus) noteStatus.textContent = "You're on the list.";
+          if (emailInput) emailInput.value = "";
+        } catch (error) {
+          const payload = error && error.payload;
+          const serverError = payload && typeof payload.error === "string" ? payload.error : "";
+          if (noteStatus) noteStatus.textContent = serverError || "Could not join the list. Try again.";
+        }
       });
       document.querySelectorAll("[data-scroll]").forEach((link) => {
         link.addEventListener("click", (event) => {
