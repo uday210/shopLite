@@ -30,6 +30,11 @@ CREATE TABLE IF NOT EXISTS orders (
   created_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS newsletter_signups (
+  email TEXT PRIMARY KEY,
+  created_at TEXT NOT NULL
+);
+
 -- SUPABASE ONLY
 -- Product search sends the SQL string built in src/routes/products.ts.
 -- SQLite runs that string directly; Supabase runs it through this function.
