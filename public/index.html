@@ -764,21 +764,25 @@
       #chat-launcher, #chat-panel {
         position: fixed;
         z-index: 30;
-        left: 16px;
+        right: 16px;
       }
       #chat-launcher {
         bottom: 16px;
+        width: 64px;
+        height: 64px;
+        padding: 0;
         border: 0;
-        border-radius: 4px;
+        border-radius: 50%;
         background: var(--green);
         color: #fff;
         font-weight: 700;
-        padding: 12px 18px;
+        display: grid;
+        place-items: center;
         box-shadow: var(--shadow);
       }
       #chat-launcher:hover { background: var(--green-2); }
       #chat-panel {
-        bottom: 68px;
+        bottom: 96px;
         width: min(360px, calc(100vw - 32px));
         max-height: min(420px, calc(100vh - 200px));
         display: flex;
@@ -1304,6 +1308,12 @@
         document.querySelector("#nav-orders").classList.toggle("active", screen === "orders");
         document.querySelector("#nav-home").setAttribute("aria-current", screen === "home" ? "page" : "false");
         document.querySelector("#nav-orders").setAttribute("aria-current", screen === "orders" ? "page" : "false");
+        const showChat = screen === "home" || screen === "orders";
+        chatLauncherEl.hidden = !showChat;
+        if (!showChat) {
+          chatPanelEl.hidden = true;
+          chatLauncherEl.setAttribute("aria-expanded", "false");
+        }
         if (screen !== "home") closeBag();
         if (screen === "home") {
           ensureHome().catch((error) => setStatus(error.message));
@@ -1772,7 +1782,10 @@
         const line = document.createElement("p");
         line.className = "chat-line";
         line.textContent = message;
-        chatLogEl.append(line);
+        const reply = document.createElement("p");
+        reply.className = "chat-line chat-reply";
+        reply.textContent = "Thanks — we received your message.";
+        chatLogEl.append(line, reply);
         chatInputEl.value = "";
         chatLogEl.scrollTop = chatLogEl.scrollHeight;
       });
