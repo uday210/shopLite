@@ -95,6 +95,28 @@
         color: var(--muted);
       }
       .pill strong { color: var(--ink); font-weight: 650; }
+      .cart-jump {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        padding: 8px 8px 8px 14px;
+        white-space: nowrap;
+      }
+      .cart-jump svg { width: 16px; height: 16px; flex: none; display: block; }
+      .cart-jump strong {
+        display: inline-grid;
+        place-items: center;
+        min-height: 1.6rem;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(244, 255, 249, 0.2);
+        color: var(--accent-ink);
+        font-family: var(--sans);
+        font-size: 0.78rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
       main.store {
         display: grid;
         grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.9fr);
@@ -102,6 +124,19 @@
         padding: 22px 0 28px;
         align-items: start;
       }
+      .shop { grid-column: 1; grid-row: 1; min-width: 0; }
+      .store-rail {
+        grid-column: 2;
+        grid-row: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        position: sticky;
+        top: 16px;
+        max-height: calc(100vh - 168px);
+        min-height: 0;
+      }
+      .order-lookup { grid-column: 1; grid-row: 2; min-width: 0; }
       .nav-link.active {
         background: var(--accent-soft);
         color: var(--accent-deep);
@@ -174,6 +209,28 @@
       .order-lines li { margin: 2px 0; }
       .section-head { margin-bottom: 12px; }
       .section-head p { margin: 4px 0 0; color: var(--muted); }
+      .shop-banner {
+        margin: 0 0 14px;
+        padding: 16px 18px 15px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 78%);
+        color: var(--accent-ink);
+        box-shadow: var(--shadow);
+      }
+      .shop-banner .eyebrow { color: #d5f3e8; }
+      .shop-banner-title {
+        margin: 2px 0 0;
+        font-size: 1.55rem;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+      }
+      .product-count {
+        margin: 0 0 12px;
+        font-family: var(--sans);
+        font-size: 0.82rem;
+        font-weight: 650;
+        color: var(--muted);
+      }
       .panel, .card, .toolbar {
         background: var(--card);
         border: 1px solid var(--line);
@@ -182,19 +239,32 @@
       .panel {
         padding: 0;
         box-shadow: var(--shadow);
-        position: sticky;
-        top: 16px;
-        max-height: calc(100vh - 168px);
         display: flex;
         flex-direction: column;
-        overflow: hidden;
+        min-height: 0;
       }
-      .panel > .panel-block:first-child {
+      .cart-panel {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+        scroll-margin-top: 16px;
+      }
+      .cart-panel:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+      }
+      .checkout-panel {
+        flex: 0 0 auto;
+        overflow: visible;
+        box-shadow: var(--shadow), inset 0 3px 0 var(--accent);
+      }
+      .cart-panel > .panel-block {
         flex: 1 1 auto;
         min-height: 0;
         display: flex;
         flex-direction: column;
       }
+      .cart-panel .panel-head { flex: none; }
       #cart { overflow: auto; min-height: 0; flex: 1 1 auto; }
       .panel-block { padding: 16px 16px 18px; }
       .panel-block + .panel-block { border-top: 1px solid var(--line); }
@@ -212,6 +282,14 @@
         padding: 6px;
         box-shadow: var(--shadow);
       }
+      #search-form.toolbar {
+        align-items: center;
+        margin-bottom: 10px;
+        padding: 6px 6px 6px 14px;
+        border-radius: 999px;
+      }
+      #search-form input { font-size: 0.98rem; }
+      #search-form button { border-radius: 999px; }
       input, button { font: inherit; }
       input {
         background: #fff;
@@ -260,7 +338,7 @@
       }
       button.danger:hover { background: #f8ebe6; border-color: #e4b5a6; color: var(--clay-deep); }
       button.danger svg { width: 14px; height: 14px; flex: none; display: block; }
-      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(210px, 100%), 1fr)); gap: 14px; }
       .card {
         padding: 16px;
         display: flex;
@@ -273,6 +351,12 @@
         transform: translateY(-2px);
         box-shadow: 0 18px 36px rgba(62, 42, 22, 0.11);
       }
+      .product-card {
+        padding: 0 0 14px;
+        gap: 6px;
+        overflow: hidden;
+        min-width: 0;
+      }
       .product-mark {
         width: 42px;
         height: 42px;
@@ -283,14 +367,42 @@
         background: var(--accent-soft);
         color: var(--accent-deep);
       }
+      .product-card .product-mark {
+        width: 100%;
+        height: 120px;
+        border-radius: 0;
+        font-family: var(--sans);
+        font-size: 2.75rem;
+        font-weight: 650;
+        letter-spacing: -0.04em;
+      }
+      .product-card .product-name,
+      .product-card .product-desc,
+      .product-card .meta-row,
+      .product-card .price,
+      .product-card button {
+        margin-left: 14px;
+        margin-right: 14px;
+      }
+      .product-card .product-name { margin-top: 8px; font-size: 1.22rem; }
       .product-mark.clay { background: #f8ebe6; color: var(--clay); }
       .product-mark.olive { background: #eef3df; color: #4d5c22; }
       .product-mark.sand { background: #f6edd8; color: #7a5a1e; }
       .product-name { font-size: 1.12rem; letter-spacing: -0.02em; }
       .product-desc { margin: 0; color: var(--muted); font-size: 0.98rem; flex: 1; }
+      .product-card .product-desc {
+        flex: none;
+        font-family: var(--sans);
+        font-size: 0.8rem;
+        line-height: 1.35;
+      }
       .meta-row { display: flex; flex-wrap: wrap; gap: 6px; }
       .price { color: var(--clay); font-variant-numeric: tabular-nums; font-weight: 650; letter-spacing: -0.02em; }
       .card .price { font-size: 1.2rem; }
+      .product-card .price { font-size: 1.35rem; }
+      .product-card .sku,
+      .product-card .stock { font-size: 0.7rem; }
+      .product-card button { margin-top: auto; }
       .sku, .stock {
         color: var(--muted);
         font-family: var(--sans);
@@ -306,6 +418,7 @@
       .stock.low { color: var(--clay-deep); background: #f8ebe6; border-color: #f0cfc4; }
       .stock.out { color: var(--muted); background: #f3eee6; }
       .card button { margin-top: 4px; }
+      .product-card button.add-cart { margin-top: auto; }
       button.add-cart:disabled {
         background: #efe8dc;
         color: var(--muted);
@@ -538,6 +651,27 @@
         line-height: 1.4;
       }
       .catalog-empty { grid-column: 1 / -1; }
+      .order-lookup {
+        background: #fbf8f2;
+        border: 1px dashed var(--line);
+        border-radius: 16px;
+        padding: 0;
+      }
+      .order-lookup summary {
+        cursor: pointer;
+        padding: 12px 16px;
+        font-family: var(--sans);
+        font-weight: 650;
+        font-size: 0.88rem;
+        color: var(--muted);
+      }
+      .order-lookup summary:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+        border-radius: 12px;
+      }
+      .lookup-body { padding: 0 16px 16px; }
+      .order-lookup pre { margin-top: 12px; }
       .site-footer {
         border-top: 1px solid var(--line);
         color: var(--muted);
@@ -547,9 +681,16 @@
       .site-footer .wrap { padding: 16px 0 22px; }
       @media (max-width: 800px) {
         main.store { grid-template-columns: 1fr; }
+        .shop, .store-rail, .order-lookup { grid-column: 1; grid-row: auto; }
         .header-inner { flex-direction: column; align-items: flex-start; }
         .session { justify-content: flex-start; }
-        .panel { position: static; max-height: none; overflow: visible; display: block; }
+        .store-rail, .cart-panel, .panel {
+          position: static;
+          max-height: none;
+          overflow: visible;
+        }
+        .cart-panel,
+        .cart-panel > .panel-block { display: block; }
         #cart { overflow: visible; }
       }
       @media (prefers-reduced-motion: reduce) {
@@ -573,7 +714,13 @@
           <button class="ghost nav-link" id="nav-home" type="button">Home</button>
           <button class="ghost nav-link" id="nav-orders" type="button">Previous orders</button>
           <span class="pill">Account <strong id="who"></strong></span>
-          <span class="pill">Cart <strong id="cart-count">0 items</strong></span>
+          <button class="cart-jump" id="nav-cart" type="button">
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M2.2 2.4h1.3l.5 1.1h9.6l-1.3 5.4H5.1L4.4 6.2H13V4.8H4.7L4 2.4H2.2zm3 8.2a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6zm5.2 0a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6z" />
+            </svg>
+            Cart
+            <strong id="cart-count">0 items</strong>
+          </button>
           <button class="ghost" id="sign-out" type="button">Sign out</button>
         </div>
       </div>
@@ -601,42 +748,51 @@
       </div>
     </section>
     <main class="wrap store" id="screen-home" hidden>
-      <section>
+      <section class="shop">
         <div class="section-head">
-          <h2>Catalog</h2>
+          <h2>Shop</h2>
           <p>Search by name, description, or SKU.</p>
+        </div>
+        <div class="shop-banner">
+          <p class="eyebrow">Everyday goods</p>
+          <p class="shop-banner-title">ShopLite</p>
         </div>
         <form class="toolbar" id="search-form">
           <input id="q" type="search" placeholder="Search name, description, or SKU" aria-label="Search products" />
-          <button class="ghost" type="submit">Search</button>
+          <button type="submit">Search</button>
         </form>
+        <p class="product-count" id="product-count" aria-live="polite">0 products</p>
         <div class="grid" id="products"></div>
       </section>
-      <aside class="panel">
-        <div class="panel-block">
-          <div class="panel-head">
-            <h2>Cart</h2>
-            <span class="cart-chip" id="cart-chip" aria-label="0 items in cart">0</span>
+      <div class="store-rail">
+        <section class="panel cart-panel" id="cart-region" tabindex="-1" aria-labelledby="cart-heading">
+          <div class="panel-block">
+            <div class="panel-head">
+              <h2 id="cart-heading">Cart</h2>
+              <span class="cart-chip" id="cart-chip" aria-label="0 items in cart">0</span>
+            </div>
+            <div id="cart"></div>
+            <div id="cart-summary" class="cart-summary" hidden></div>
           </div>
-          <div id="cart"></div>
-          <div id="cart-summary" class="cart-summary" hidden></div>
-        </div>
-        <div class="panel-block">
-          <div class="panel-head">
-            <h2>Checkout</h2>
+        </section>
+        <section class="panel checkout-panel" aria-labelledby="checkout-heading">
+          <div class="panel-block">
+            <div class="panel-head">
+              <h2 id="checkout-heading">Checkout</h2>
+            </div>
+            <div class="stack">
+              <label class="field">Payment token
+                <input id="payment-token" value="tok_test" />
+              </label>
+              <p class="hint">tok_test completes the order. tok_decline leaves the cart and stock unchanged.</p>
+              <button id="checkout" type="button">Checkout</button>
+            </div>
           </div>
-          <div class="stack">
-            <label class="field">Payment token
-              <input id="payment-token" value="tok_test" />
-            </label>
-            <p class="hint">tok_test completes the order. tok_decline leaves the cart and stock unchanged.</p>
-            <button id="checkout" type="button">Checkout</button>
-          </div>
-        </div>
-        <div class="panel-block">
-          <div class="panel-head">
-            <h2>Order lookup</h2>
-          </div>
+        </section>
+      </div>
+      <details class="order-lookup" id="order-lookup">
+        <summary>Look up an order</summary>
+        <div class="lookup-body">
           <form class="stack" id="lookup-form">
             <label class="field">Order id
               <input id="order-id" placeholder="ord_…" />
@@ -646,7 +802,7 @@
           <pre id="output">No order yet.</pre>
           <div class="status" id="status" role="status"></div>
         </div>
-      </aside>
+      </details>
     </main>
     <main class="wrap orders-page" id="screen-orders" hidden>
       <div class="section-head">
@@ -695,6 +851,9 @@
       const statusEl = document.querySelector("#status");
       const whoEl = document.querySelector("#who");
       const cartCountEl = document.querySelector("#cart-count");
+      const productCountEl = document.querySelector("#product-count");
+      const orderLookupEl = document.querySelector("#order-lookup");
+      const cartRegionEl = document.querySelector("#cart-region");
 
       function money(cents) {
         const sign = cents < 0 ? "-" : "";
@@ -703,6 +862,18 @@
 
       function setStatus(message) {
         statusEl.textContent = message || "";
+        if (message && orderLookupEl) orderLookupEl.open = true;
+      }
+
+      function focusCart() {
+        const reveal = () => {
+          if (homeEl.hidden || !cartRegionEl) return;
+          cartRegionEl.scrollIntoView({ block: "start" });
+          cartRegionEl.focus({ preventScroll: true });
+        };
+        if (!state.token) return;
+        if (homeEl.hidden) navigate("home");
+        reveal();
       }
 
       function markTone(name) {
@@ -848,6 +1019,7 @@
         clearSession();
         whoEl.textContent = "";
         setCartCount(0);
+        productCountEl.textContent = "0 products";
         cartEl.replaceChildren();
         cartSummaryEl.replaceChildren();
         cartSummaryEl.hidden = true;
@@ -965,6 +1137,8 @@
       }
 
       function renderProducts(products) {
+        const count = products.length;
+        productCountEl.textContent = count + (count === 1 ? " product" : " products");
         productsEl.replaceChildren();
         if (!products.length) {
           const empty = document.createElement("p");
@@ -975,7 +1149,7 @@
         }
         for (const product of products) {
           const card = document.createElement("article");
-          card.className = "card";
+          card.className = "card product-card";
           const mark = document.createElement("div");
           mark.className = "product-mark" + (markTone(product.name) ? " " + markTone(product.name) : "");
           mark.setAttribute("aria-hidden", "true");
@@ -1010,7 +1184,7 @@
             button.textContent = "Out of stock";
             button.disabled = true;
           }
-          card.append(mark, title, desc, meta, price, button);
+          card.append(mark, title, price, desc, meta, button);
           productsEl.append(card);
         }
       }
@@ -1187,6 +1361,7 @@
           const data = await api("/checkout", { method: "POST", body: { paymentToken } });
           outputEl.textContent = JSON.stringify(data, null, 2);
           document.querySelector("#order-id").value = data.order.id;
+          if (orderLookupEl) orderLookupEl.open = true;
           await loadCart();
           await loadProducts();
         } catch (error) {
@@ -1216,6 +1391,7 @@
       document.querySelector("#login-form").addEventListener("submit", login);
       document.querySelector("#nav-home").addEventListener("click", () => navigate("home"));
       document.querySelector("#nav-orders").addEventListener("click", () => navigate("orders"));
+      document.querySelector("#nav-cart").addEventListener("click", focusCart);
       document.querySelector("#sign-out").addEventListener("click", signOut);
       window.addEventListener("hashchange", () => applyScreen(screenFromHash()));
 
