@@ -761,6 +761,89 @@
         outline: 2px solid var(--green);
         outline-offset: 2px;
       }
+      #chat-launcher, #chat-panel {
+        position: fixed;
+        z-index: 30;
+        left: 16px;
+      }
+      #chat-launcher {
+        bottom: 16px;
+        border: 0;
+        border-radius: 4px;
+        background: var(--green);
+        color: #fff;
+        font-weight: 700;
+        padding: 12px 18px;
+        box-shadow: var(--shadow);
+      }
+      #chat-launcher:hover { background: var(--green-2); }
+      #chat-panel {
+        bottom: 68px;
+        width: min(360px, calc(100vw - 32px));
+        max-height: min(420px, calc(100vh - 200px));
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        color: var(--ink);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      .chat-head {
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      .chat-head h2 { font-size: 28px; }
+      #chat-log {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: 180px;
+        overflow: auto;
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .chat-line {
+        margin: 0;
+        max-width: 100%;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        background: var(--surface);
+        color: var(--ink);
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+      }
+      #chat-form {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 14px 14px;
+        border-top: 1px solid var(--line);
+      }
+      #chat-input {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: auto;
+      }
+      #chat-form button {
+        flex: none;
+        border: 0;
+        border-radius: 4px;
+        background: var(--green);
+        color: #fff;
+        font-weight: 700;
+        padding: 12px 16px;
+      }
+      #chat-form button:hover { background: var(--green-2); }
       @media (max-width: 980px) {
         .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       }
@@ -975,6 +1058,18 @@
         </div>
       </footer>
     </div>
+    <button id="chat-launcher" type="button" aria-controls="chat-panel" aria-expanded="false">Chat</button>
+    <section id="chat-panel" hidden aria-labelledby="chat-title">
+      <div class="chat-head">
+        <h2 id="chat-title">Chat</h2>
+        <button class="close" id="chat-close" type="button" aria-label="Close chat">×</button>
+      </div>
+      <div id="chat-log" role="log" aria-live="polite" aria-relevant="additions"></div>
+      <form id="chat-form">
+        <input id="chat-input" type="text" autocomplete="off" aria-label="Message" />
+        <button type="submit">Send</button>
+      </form>
+    </section>
     <script>
       const SESSION_KEY = "shoplite.session";
       const state = { token: "", userId: "", cartOrder: [] };
@@ -1648,8 +1743,44 @@
           scrollToShop(link.getAttribute("data-scroll"));
         });
       });
+      const chatLauncherEl = document.querySelector("#chat-launcher");
+      const chatPanelEl = document.querySelector("#chat-panel");
+      const chatLogEl = document.querySelector("#chat-log");
+      const chatFormEl = document.querySelector("#chat-form");
+      const chatInputEl = document.querySelector("#chat-input");
+
+      function openChat() {
+        chatPanelEl.hidden = false;
+        chatLauncherEl.setAttribute("aria-expanded", "true");
+        chatInputEl.focus();
+      }
+
+      function closeChat() {
+        chatPanelEl.hidden = true;
+        chatLauncherEl.setAttribute("aria-expanded", "false");
+      }
+
+      chatLauncherEl.addEventListener("click", openChat);
+      document.querySelector("#chat-close").addEventListener("click", () => {
+        closeChat();
+        chatLauncherEl.focus();
+      });
+      chatFormEl.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const message = chatInputEl.value.trim();
+        if (!message) return;
+        const line = document.createElement("p");
+        line.className = "chat-line";
+        line.textContent = message;
+        chatLogEl.append(line);
+        chatInputEl.value = "";
+        chatLogEl.scrollTop = chatLogEl.scrollHeight;
+      });
       document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") closeBag();
+        if (event.key === "Escape") {
+          closeBag();
+          closeChat();
+        }
       });
       window.addEventListener("hashchange", () => applyScreen(screenFromHash()));
 
