@@ -866,13 +866,25 @@
       }
 
       function focusCart() {
+        if (!state.token || !cartRegionEl) return;
         const reveal = () => {
-          if (homeEl.hidden || !cartRegionEl) return;
+          if (homeEl.hidden) return;
           cartRegionEl.scrollIntoView({ block: "start" });
           cartRegionEl.focus({ preventScroll: true });
         };
-        if (!state.token) return;
-        if (homeEl.hidden) navigate("home");
+        if (homeEl.hidden || location.hash !== "#home") {
+          const onHash = () => {
+            window.removeEventListener("hashchange", onHash);
+            reveal();
+          };
+          window.addEventListener("hashchange", onHash);
+          navigate("home");
+          if (!homeEl.hidden) {
+            window.removeEventListener("hashchange", onHash);
+            reveal();
+          }
+          return;
+        }
         reveal();
       }
 
