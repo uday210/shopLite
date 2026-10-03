@@ -816,14 +816,25 @@
       }
       .chat-line {
         margin: 0;
-        max-width: 100%;
-        padding: 8px 10px;
-        border: 1px solid var(--line);
-        border-radius: 4px;
-        background: var(--surface);
-        color: var(--ink);
+        width: fit-content;
+        max-width: 78%;
+        padding: 8px 12px;
         overflow-wrap: anywhere;
         white-space: pre-wrap;
+      }
+      .chat-line.chat-user {
+        align-self: flex-end;
+        background: var(--green);
+        color: #fff;
+        border: 0;
+        border-radius: 16px 16px 4px 16px;
+      }
+      .chat-line.chat-reply {
+        align-self: flex-start;
+        background: var(--surface-2);
+        color: var(--ink);
+        border: 1px solid var(--line);
+        border-radius: 16px 16px 16px 4px;
       }
       #chat-form {
         flex: none;
@@ -1780,7 +1791,7 @@
         const message = chatInputEl.value.trim();
         if (!message) return;
         const line = document.createElement("p");
-        line.className = "chat-line";
+        line.className = "chat-line chat-user";
         line.textContent = message;
         const reply = document.createElement("p");
         reply.className = "chat-line chat-reply";
