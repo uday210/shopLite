@@ -7,6 +7,7 @@ import { authRoutes } from "./routes/auth.js";
 import { cartRoutes } from "./routes/cart.js";
 import { checkoutRoutes } from "./routes/checkout.js";
 import { healthRoutes } from "./routes/health.js";
+import { newsletterRoutes } from "./routes/newsletter.js";
 import { orderRoutes } from "./routes/orders.js";
 import { productRoutes } from "./routes/products.js";
 
@@ -21,6 +22,7 @@ export function createApp(): Hono {
   app.route("/", cartRoutes);
   app.route("/", checkoutRoutes);
   app.route("/", orderRoutes);
+  app.route("/", newsletterRoutes);
 
   app.get("/", (c) => {
     const html = readFileSync(path.resolve(process.cwd(), "public/index.html"), "utf8");
