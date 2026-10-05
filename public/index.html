@@ -75,13 +75,14 @@
         line-height: 1.4;
       }
       .nav {
-        min-height: 76px;
-        display: flex;
+        min-height: 84px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
         align-items: center;
-        justify-content: space-between;
-        gap: 12px 18px;
-        padding: 0 5vw;
+        column-gap: 18px;
+        padding: 0 4vw;
         border-bottom: 1px solid var(--line);
+        box-shadow: inset 0 3px 0 var(--green);
         position: sticky;
         top: 0;
         z-index: 20;
@@ -89,11 +90,28 @@
         background: color-mix(in srgb, var(--surface) 94%, transparent);
         backdrop-filter: blur(14px);
       }
-      .nav-left, .nav-right { display: flex; align-items: center; gap: 4px; min-width: 0; }
-      .nav-link, #nav-cart, #sign-out {
-        padding: 10px 13px;
-        border-radius: 999px;
+      .nav-left, .nav-right { display: flex; align-items: center; min-width: 0; }
+      .nav-left { justify-self: stretch; flex-wrap: wrap; gap: 18px; }
+      .nav-right { justify-self: stretch; justify-content: flex-end; gap: 18px; }
+      .nav-brand {
+        justify-self: center;
+        margin: 0;
+        padding: 4px 2px;
         border: 0;
+        background: transparent;
+        color: var(--ink);
+        font-family: var(--serif);
+        font-size: 30px;
+        font-weight: 500;
+        line-height: 1;
+        letter-spacing: -0.03em;
+        white-space: nowrap;
+      }
+      .nav-link, #nav-cart, #sign-out {
+        padding: 8px 0;
+        border-radius: 0;
+        border: 0;
+        border-bottom: 2px solid transparent;
         background: transparent;
         color: var(--ink);
         font-size: 14px;
@@ -101,9 +119,22 @@
         display: inline-flex;
         align-items: center;
         gap: 9px;
+        white-space: nowrap;
       }
-      .nav-link.active { background: var(--surface-2); color: var(--green-2); }
-      .nav-link:hover, #nav-cart:hover, #sign-out:hover { background: var(--surface-2); }
+      #nav-cart, #sign-out { flex: none; }
+      .nav-link.active,
+      .nav-link[aria-current="page"] {
+        background: transparent;
+        color: var(--green-2);
+        border-bottom-color: var(--green);
+      }
+      .nav-link:hover,
+      #nav-cart:hover,
+      #sign-out:hover,
+      .nav-brand:hover {
+        background: transparent;
+        color: var(--green);
+      }
       .account-label {
         display: inline-flex;
         align-items: center;
@@ -119,6 +150,7 @@
         text-overflow: ellipsis;
         white-space: nowrap;
         max-width: 14rem;
+        min-width: 0;
       }
       #nav-cart { position: relative; }
       .bag-count {
@@ -135,19 +167,21 @@
         font-variant-numeric: tabular-nums;
       }
       .hero {
-        min-height: 585px;
+        min-height: 520px;
         display: grid;
-        grid-template-columns: 1.02fr 0.98fr;
+        grid-template-columns: minmax(0, 0.98fr) minmax(0, 1.02fr);
         border-bottom: 1px solid var(--line);
       }
       .hero-copy {
-        padding: 90px 7vw 64px;
+        padding: 72px 6vw 56px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         background: var(--surface);
         min-width: 0;
+        border-left: 4px solid var(--rust);
       }
+      .hero-copy .eyebrow { letter-spacing: 0.12em; }
       .eyebrow {
         margin: 0;
         font-family: var(--sans);
@@ -194,18 +228,18 @@
       .hero-visual {
         position: relative;
         overflow: hidden;
-        background: #adc5bc;
-        min-height: 480px;
+        background: var(--ink);
+        min-height: 520px;
         min-width: 0;
       }
       .hero-monogram {
         height: 100%;
-        min-height: 480px;
+        min-height: 520px;
         display: grid;
         place-items: center;
         background:
-          radial-gradient(420px 320px at 28% 38%, rgba(255, 253, 248, 0.38), transparent 68%),
-          linear-gradient(165deg, #d5e3dc 0%, #9db8ae 46%, #7ea396 100%);
+          radial-gradient(480px 360px at 30% 36%, color-mix(in srgb, var(--white) 28%, transparent), transparent 68%),
+          linear-gradient(160deg, var(--green) 0%, var(--green-2) 55%, var(--ink) 100%);
       }
       .hero-monogram span {
         font-family: var(--serif);
@@ -213,24 +247,26 @@
         font-weight: 500;
         line-height: 0.8;
         letter-spacing: -0.06em;
-        color: rgba(255, 253, 248, 0.94);
+        color: color-mix(in srgb, var(--white) 92%, transparent);
       }
       .hero-stamp {
         position: absolute;
-        right: 26px;
-        bottom: 26px;
+        left: 24px;
+        top: 24px;
+        right: auto;
+        bottom: auto;
         width: 120px;
         height: 120px;
         border-radius: 50%;
         background: var(--rust);
-        color: #fff;
+        color: var(--white);
         display: grid;
         place-items: center;
         text-align: center;
         font-family: var(--serif);
         font-size: 19px;
         line-height: 1.1;
-        transform: rotate(7deg);
+        transform: rotate(-6deg);
         box-shadow: var(--soft);
       }
       .trust {
@@ -862,16 +898,33 @@
       @media (max-width: 980px) {
         .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       }
+      @media (max-width: 860px) {
+        .nav-left { gap: 10px; }
+      }
       @media (max-width: 800px) {
         .announcement { font-size: 11px; letter-spacing: 0.02em; padding: 8px 14px; }
-        .nav { height: auto; padding: 10px 16px; align-items: flex-start; flex-wrap: wrap; }
-        .nav-left, .nav-right { flex-wrap: wrap; }
+        .nav {
+          height: auto;
+          min-height: 0;
+          padding: 10px 12px 12px;
+          align-items: center;
+          column-gap: 8px;
+          row-gap: 4px;
+          grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+          grid-template-areas:
+            "brand actions"
+            "links links";
+        }
+        .nav-brand { grid-area: brand; justify-self: start; font-size: 28px; }
+        .nav-right { grid-area: actions; justify-self: stretch; justify-content: flex-end; gap: 6px; flex-wrap: nowrap; }
+        .nav-left { grid-area: links; width: 100%; justify-self: stretch; flex-wrap: wrap; gap: 4px 8px; }
+        .account-label { padding: 8px 4px 8px 0; }
         .hero { grid-template-columns: 1fr; min-height: 0; }
-        .hero-copy { padding: 48px 22px 36px; }
+        .hero-copy { padding: 40px 22px 32px; }
         .hero h1 { font-size: clamp(40px, 12vw, 56px); }
         .hero-copy .lede { font-size: 16px; }
-        .hero-visual, .hero-monogram { min-height: 320px; }
-        .hero-stamp { width: 96px; height: 96px; font-size: 16px; right: 16px; bottom: 16px; }
+        .hero-visual, .hero-monogram { min-height: 280px; }
+        .hero-stamp { width: 96px; height: 96px; font-size: 16px; left: 24px; top: 24px; right: auto; bottom: auto; }
         .trust { grid-template-columns: 1fr; padding: 20px 22px; gap: 14px; }
         .catalog { padding: 48px 18px 28px; }
         .catalog-head { display: block; }
@@ -910,6 +963,7 @@
           <a class="nav-link" href="#products" data-scroll="#products">Best sellers</a>
           <button class="nav-link" id="nav-orders" type="button">Previous orders</button>
         </div>
+        <button type="button" class="nav-brand" id="nav-brand">ShopLite</button>
         <div class="nav-right">
           <span class="account-label">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
@@ -956,6 +1010,10 @@
 
       <main id="screen-home" hidden>
         <section class="hero">
+          <div class="hero-visual">
+            <div class="hero-monogram" aria-hidden="true"><span>S</span></div>
+            <div class="hero-stamp">Made for<br>every day</div>
+          </div>
           <div class="hero-copy">
             <p class="eyebrow">Considered essentials · Autumn edit</p>
             <h1>Better things for everyday living.</h1>
@@ -964,10 +1022,6 @@
               <a class="primary" href="#products" data-scroll="#products">Shop the collection</a>
               <a class="secondary" href="#story" data-scroll="#story">Our approach →</a>
             </div>
-          </div>
-          <div class="hero-visual">
-            <div class="hero-monogram" aria-hidden="true"><span>S</span></div>
-            <div class="hero-stamp">Made for<br>every day</div>
           </div>
         </section>
 
@@ -1737,6 +1791,7 @@
       document.querySelector("#lookup-form").addEventListener("submit", lookup);
       document.querySelector("#login-form").addEventListener("submit", login);
       document.querySelector("#nav-home").addEventListener("click", () => navigate("home"));
+      document.querySelector("#nav-brand").addEventListener("click", () => navigate("home"));
       document.querySelector("#nav-orders").addEventListener("click", () => navigate("orders"));
       document.querySelector("#nav-cart").addEventListener("click", focusCart);
       document.querySelector("#sign-out").addEventListener("click", signOut);
