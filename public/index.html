@@ -91,8 +91,8 @@
         backdrop-filter: blur(14px);
       }
       .nav-left, .nav-right { display: flex; align-items: center; min-width: 0; }
-      .nav-left { justify-self: start; gap: 18px; }
-      .nav-right { justify-self: end; justify-content: flex-end; gap: 18px; }
+      .nav-left { justify-self: stretch; flex-wrap: wrap; gap: 18px; }
+      .nav-right { justify-self: stretch; justify-content: flex-end; gap: 18px; }
       .nav-brand {
         justify-self: center;
         margin: 0;
@@ -150,6 +150,7 @@
         text-overflow: ellipsis;
         white-space: nowrap;
         max-width: 14rem;
+        min-width: 0;
       }
       #nav-cart { position: relative; }
       .bag-count {
@@ -897,14 +898,17 @@
       @media (max-width: 980px) {
         .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       }
+      @media (max-width: 860px) {
+        .nav-left { gap: 10px; }
+      }
       @media (max-width: 800px) {
         .announcement { font-size: 11px; letter-spacing: 0.02em; padding: 8px 14px; }
         .nav {
           height: auto;
           min-height: 0;
-          padding: 10px 16px 12px;
+          padding: 10px 12px 12px;
           align-items: center;
-          column-gap: 12px;
+          column-gap: 8px;
           row-gap: 4px;
           grid-template-columns: minmax(0, auto) minmax(0, 1fr);
           grid-template-areas:
@@ -912,7 +916,7 @@
             "links links";
         }
         .nav-brand { grid-area: brand; justify-self: start; font-size: 28px; }
-        .nav-right { grid-area: actions; justify-self: end; gap: 10px; flex-wrap: nowrap; }
+        .nav-right { grid-area: actions; justify-self: stretch; justify-content: flex-end; gap: 6px; flex-wrap: nowrap; }
         .nav-left { grid-area: links; width: 100%; justify-self: stretch; flex-wrap: wrap; gap: 4px 8px; }
         .account-label { padding: 8px 4px 8px 0; }
         .hero { grid-template-columns: 1fr; min-height: 0; }
